@@ -61,7 +61,7 @@ class Blockchain {
    * that this method is a private method.
    */
   _addBlock(block) {
-    return new Promise(async (res) => {
+    return new Promise(async (res, rej) => {
       // genesis block
       if (this.height === -1) {
         block.height = 1;
@@ -73,7 +73,8 @@ class Blockchain {
       block.time = new Date().getTime().toString().slice(0, -3);
       block.hash = SHA256(JSON.stringify(block)).toString();
       this.chain.push(block);
-      res(block);
+      const valid = await this.validateChain();
+      return valid ? res(block) : rej(this.chain.pop());
     });
   }
 
@@ -116,20 +117,24 @@ class Blockchain {
 
   submitStar(address, message, signature, star) {
     return new Promise(async (res, rej) => {
-      const messageTimeStamp = parseInt(message.split(":")[1]);
-      const currentTime = parseInt(
-        new Date().getTime().toString().slice(0, -3)
-      );
-
-      if (
-        currentTime - messageTimeStamp < FIVE_MINUTES_UTC &&
-        bitcoinMessage.verify(message, address, signature)
-      ) {
-        const block = await this._addBlock(
-          new Block({ data: { star, owner: address } })
+      try {
+        const messageTimeStamp = parseInt(message.split(":")[1]);
+        const currentTime = parseInt(
+          new Date().getTime().toString().slice(0, -3)
         );
-        res(block);
-      } else {
+
+        if (
+          currentTime - messageTimeStamp < FIVE_MINUTES_UTC &&
+          bitcoinMessage.verify(message, address, signature)
+        ) {
+          const block = await this._addBlock(
+            new Block({ data: { star, owner: address } })
+          );
+          res(block);
+        } else {
+          rej(null);
+        }
+      } catch (error) {
         rej(null);
       }
     });
