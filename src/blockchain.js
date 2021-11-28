@@ -204,7 +204,6 @@ class Blockchain {
         const currentBlock = self.chain[i];
         try {
           let valid = await currentBlock.validate();
-          console.log(valid);
 
           if (valid) {
             // genesis block

@@ -6,7 +6,7 @@
  * To use:
  * 1. go to https://reinproject.org/bitcoin-signature-tool/#sign
  * 2. copy address, signature and message and paste them here.
- * 3. run the script using `node scripts/validateSignature.js`
+ * 3. run the script using `npm run validateAddress`
  * 4. if you see true in the console, the message has been signed properly
  */
 
