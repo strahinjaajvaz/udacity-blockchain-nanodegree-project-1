@@ -120,13 +120,13 @@ class Blockchain {
   submitStar(address, message, signature, star) {
     const self = this;
     return new Promise(async (res, rej) => {
-      const time = parseInt(message.split(":")[1]);
+      const messageTimeStamp = parseInt(message.split(":")[1]);
       const currentTime = parseInt(
         new Date().getTime().toString().slice(0, -3)
       );
 
       if (
-        currentTime - time < FIVE_MINUTES_UTC &&
+        currentTime - messageTimeStamp < FIVE_MINUTES_UTC &&
         bitcoinMessage.verify(message, address, signature)
       ) {
         const block = await self._addBlock(
@@ -198,8 +198,38 @@ class Blockchain {
    */
   validateChain() {
     const self = this;
-    const errorLog = [];
-    return new Promise(async (res, rej) => {});
+    return new Promise(async (res) => {
+      const errorLog = [];
+      for (let i = 0; i < self.chain.length; i++) {
+        const currentBlock = self.chain[i];
+        try {
+          let valid = await currentBlock.validate();
+          console.log(valid);
+
+          if (valid) {
+            // genesis block
+            if (
+              currentBlock.previousBlockHash === null &&
+              currentBlock.height === 1
+            )
+              continue;
+            // is the prevHash the same as the block before and is the height
+            // one larger than the block before
+            else if (
+              currentBlock.previousBlockHash !== self.chain[i - 1].hash ||
+              currentBlock.height !== self.chain[i - 1].height + 1
+            ) {
+              valid = false;
+            }
+          }
+          if (!valid) errorLog.push({ hash: currentBlock.hash, valid: false });
+        } catch (e) {
+          errorLog.push({ hash: currentBlock.hash, valid: false });
+        }
+      }
+
+      res(errorLog);
+    });
   }
 }
 

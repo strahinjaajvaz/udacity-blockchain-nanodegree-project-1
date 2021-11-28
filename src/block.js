@@ -37,9 +37,11 @@ class Block {
   validate() {
     let self = this;
     return new Promise((resolve) => {
-      const auxiliary = self.hash;
-      const recalculatedHash = SHA256(JSON.stringify(self)).toString();
-      resolve(auxiliary === recalculatedHash);
+      const hash = self.hash;
+      self.hash = null;
+      const newHash = SHA256(JSON.stringify(self)).toString();
+      self.hash = hash;
+      resolve(hash === newHash);
     });
   }
 
