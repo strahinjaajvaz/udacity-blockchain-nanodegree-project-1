@@ -45,9 +45,7 @@ class Blockchain {
    * Utility method that return a Promise that will resolve with the height of the chain
    */
   getChainHeight() {
-    return new Promise((res) => {
-      res(this.height);
-    });
+    return new Promise((res) => res(this.height));
   }
 
   /**
@@ -63,10 +61,9 @@ class Blockchain {
    * that this method is a private method.
    */
   _addBlock(block) {
-    const self = this;
     return new Promise(async (res) => {
       // genesis block
-      if (self.height === -1) {
+      if (this.height === -1) {
         block.height = 1;
         this.height = 1;
       } else {
@@ -118,7 +115,6 @@ class Blockchain {
    */
 
   submitStar(address, message, signature, star) {
-    const self = this;
     return new Promise(async (res, rej) => {
       const messageTimeStamp = parseInt(message.split(":")[1]);
       const currentTime = parseInt(
@@ -129,7 +125,7 @@ class Blockchain {
         currentTime - messageTimeStamp < FIVE_MINUTES_UTC &&
         bitcoinMessage.verify(message, address, signature)
       ) {
-        const block = await self._addBlock(
+        const block = await this._addBlock(
           new Block({ data: { star, owner: address } })
         );
         res(block);
@@ -146,9 +142,8 @@ class Blockchain {
    * @param {*} hash
    */
   getBlockByHash(hash) {
-    const self = this;
     return new Promise((res) => {
-      const block = self.chain.find((b) => b.hash === hash);
+      const block = this.chain.find((b) => b.hash === hash);
       res(block ?? null);
     });
   }
@@ -159,9 +154,8 @@ class Blockchain {
    * @param {*} height
    */
   getBlockByHeight(height) {
-    const self = this;
     return new Promise((res) => {
-      const block = self.chain.find((b) => b.height === height);
+      const block = this.chain.find((b) => b.height === height);
       res(block ?? null);
     });
   }
@@ -173,10 +167,9 @@ class Blockchain {
    * @param {*} address
    */
   getStarsByWalletAddress(address) {
-    const self = this;
     return new Promise(async (res) => {
       const stars = [];
-      for (const block of self.chain) {
+      for (const block of this.chain) {
         const { data } = await block.getBData();
 
         // handling the genesis block
@@ -197,11 +190,10 @@ class Blockchain {
    * 2. Each Block should check the with the previousBlockHash
    */
   validateChain() {
-    const self = this;
     return new Promise(async (res) => {
       const errorLog = [];
-      for (let i = 0; i < self.chain.length; i++) {
-        const currentBlock = self.chain[i];
+      for (let i = 0; i < this.chain.length; i++) {
+        const currentBlock = this.chain[i];
         try {
           let valid = await currentBlock.validate();
 
@@ -215,8 +207,8 @@ class Blockchain {
             // is the prevHash the same as the block before and is the height
             // one larger than the block before
             else if (
-              currentBlock.previousBlockHash !== self.chain[i - 1].hash ||
-              currentBlock.height !== self.chain[i - 1].height + 1
+              currentBlock.previousBlockHash !== this.chain[i - 1].hash ||
+              currentBlock.height !== this.chain[i - 1].height + 1
             ) {
               valid = false;
             }
